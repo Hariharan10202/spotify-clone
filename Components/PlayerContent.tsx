@@ -1,7 +1,6 @@
 "use client";
 
-import useSound from "use-sound";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BsPauseFill, BsPlayFill } from "react-icons/bs";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
@@ -22,6 +21,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
   const player = usePlayer();
   const [volume, setVolume] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const songRef = useRef<HTMLAudioElement>(null);
 
   const Icon = isPlaying ? BsPauseFill : BsPlayFill;
   const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
@@ -56,30 +57,25 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     player.setId(previousSong);
   };
 
-  const [play, { pause, sound }] = useSound(songUrl, {
-    volume: volume,
-    onplay: () => setIsPlaying(true),
-    onend: () => {
-      setIsPlaying(false);
-      onPlayNext();
-    },
-    onpause: () => setIsPlaying(false),
-    format: ["mp3"],
-  });
-
   useEffect(() => {
-    sound?.play();
-
+    if (songRef.current) {
+      songRef.current.play();
+      setIsPlaying(true);
+    }
     return () => {
-      sound?.unload();
+      console.log(songRef);
     };
-  }, [sound]);
+  }, [songRef]);
 
   const handlePlay = () => {
     if (!isPlaying) {
-      play();
+      {
+        if (songRef.current) songRef.current.play();
+        setIsPlaying(true);
+      }
     } else {
-      pause();
+      if (songRef.current) songRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -110,6 +106,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
             items-center
           "
       >
+        <audio ref={songRef} src={songUrl} />
         <div
           onClick={handlePlay}
           className="
